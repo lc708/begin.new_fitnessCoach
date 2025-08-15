@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import HomePage from './pages/HomePage'
 import FormPage from './pages/FormPage'
 import PlanPage from './pages/PlanPage'
@@ -15,6 +16,7 @@ function App() {
             <Route path="/plan" element={<PlanPage />} />
           </Routes>
         </div>
+        <Analytics />
       </Router>
     </UserDataProvider>
   )
