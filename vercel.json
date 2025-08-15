@@ -26,17 +26,5 @@
   "outputDirectory": "frontend/dist",
   "framework": "vite",
   "installCommand": "cd frontend && npm install",
-  "buildCommand": "cd frontend && npm run build",
-  "env": {
-    "OPENAI_API_KEY": "@openai_api_key",
-    "GEMINI_API_KEY": "@gemini_api_key",
-    "DEEPSEEK_API_KEY": "@deepseek_api_key",
-    "OPENROUTER_API_KEY": "@openrouter_api_key",
-    "LLM_PROVIDER": "openrouter",
-    "OPENAI_MODEL": "gpt-5-mini",
-    "GEMINI_MODEL": "gemini-2.5-flash",
-    "DEEPSEEK_MODEL": "deepseek-chat",
-    "OPENROUTER_MODEL": "google/gemini-2.5-flash",
-    "VITE_API_BASE_URL": ""
-  }
+  "buildCommand": "cd frontend && npm run build"
 }
