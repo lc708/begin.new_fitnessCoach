@@ -230,9 +230,7 @@ async def get_exercise_preview():
         logger.error(f"获取动作预览失败: {e}")
         return {"error": "无法获取动作预览"}
 
-# Vercel serverless function入口点
-def handler(request):
-    return app
+# Vercel会自动使用这个app实例作为serverless function
 
 # 本地运行
 if __name__ == "__main__":

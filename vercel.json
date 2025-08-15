@@ -27,11 +27,6 @@
   "framework": "vite",
   "installCommand": "cd frontend && npm install",
   "buildCommand": "cd frontend && npm run build",
-  "functions": {
-    "backend/api.py": {
-      "runtime": "python3.9"
-    }
-  },
   "env": {
     "OPENAI_API_KEY": "@openai_api_key",
     "GEMINI_API_KEY": "@gemini_api_key",
