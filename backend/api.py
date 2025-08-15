@@ -19,9 +19,7 @@ except ImportError:
 # 强制使用更快的LLM - 通过OPENROUTER使用GEMINI 2.5 FLASH
 os.environ["LLM_PROVIDER"] = "openrouter"
 
-# 添加父目录到路径
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+# 导入本地模块 (文件现在都在backend目录中)
 from flow import create_fitness_plan_flow
 from datetime import datetime
 
@@ -232,6 +230,11 @@ async def get_exercise_preview():
         logger.error(f"获取动作预览失败: {e}")
         return {"error": "无法获取动作预览"}
 
+# Vercel serverless function入口点
+def handler(request):
+    return app
+
+# 本地运行
 if __name__ == "__main__":
     import uvicorn
     
