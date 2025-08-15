@@ -2,8 +2,11 @@
 训练计划格式化工具 - 将生成的训练计划格式化为用户友好的展示格式
 """
 import json
+import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
+
+logger = logging.getLogger(__name__)
 
 def format_weekly_plan(raw_plan: Dict, user_data: Dict) -> Dict:
     """
@@ -219,27 +222,43 @@ def format_complete_plan(raw_plan_data: str, user_data: Dict) -> Dict:
     """
     from .fitness_knowledge import get_disclaimer
     
-    # 解析原始计划（这里简化处理，实际可能需要更复杂的解析逻辑）
+    # 解析LLM返回的JSON格式训练计划
     try:
-        # 尝试解析JSON格式
-        if raw_plan_data.strip().startswith('{'):
-            parsed_plan = json.loads(raw_plan_data)
+        # 清理可能的额外文本，只保留JSON部分
+        json_start = raw_plan_data.find('{')
+        json_end = raw_plan_data.rfind('}') + 1
+        
+        if json_start != -1 and json_end > json_start:
+            clean_json = raw_plan_data[json_start:json_end]
+            parsed_plan = json.loads(clean_json)
+            logger.info("成功解析LLM返回的JSON格式训练计划")
         else:
-            # 如果是文本格式，创建基础结构
-            parsed_plan = {"overview": raw_plan_data}
-    except:
-        parsed_plan = {"overview": raw_plan_data}
+            raise ValueError("未找到有效的JSON格式")
+            
+    except Exception as e:
+        logger.error(f"解析LLM返回的JSON失败: {e}")
+        # 创建备用计划结构
+        parsed_plan = {
+            "plan_title": "备用训练计划",
+            "overview": {"description": raw_plan_data[:500] + "..."},
+            "daily_workouts": [],
+            "weekly_plan": {
+                "total_days": user_data['schedule']['days_per_week'],
+                "session_duration": user_data['schedule']['time_per_session']
+            }
+        }
     
-    # 创建完整的格式化计划
+    # 创建完整的格式化计划，使用LLM解析后的JSON数据
     formatted_plan = {
         "overview": {
-            "title": f"🏋️ {user_data['goals']['primary_goal']}专属训练计划",
+            "title": parsed_plan.get("plan_title", f"🏋️ {user_data['goals']['primary_goal']}专属训练计划"),
             "subtitle": f"适合{user_data['basic_info']['experience']}的个性化方案",
             "duration": "4周进阶计划",
             "frequency": f"每周{user_data['schedule']['days_per_week']}次",
             "session_time": f"每次{user_data['schedule']['time_per_session']}分钟",
             "created_date": datetime.now().strftime("%Y年%m月%d日 %H:%M"),
-            "description": parsed_plan.get("overview", "基于您的身体数据和目标定制的专业训练计划")
+            "description": parsed_plan.get("overview", {}).get("description", "个性化训练计划"),
+            "principles": parsed_plan.get("overview", {}).get("principles", [])
         },
         "user_profile": {
             "基础信息": f"{user_data['basic_info']['age']}岁 {user_data['basic_info']['gender']} "
@@ -249,10 +268,15 @@ def format_complete_plan(raw_plan_data: str, user_data: Dict) -> Dict:
             "训练频率": f"每周{user_data['schedule']['days_per_week']}次",
             "单次时长": f"{user_data['schedule']['time_per_session']}分钟"
         },
-        "weekly_schedule": generate_weekly_schedule(user_data),
-        "daily_plans": generate_daily_plans(user_data),
-        "progression": create_progression_plan(),
-        "safety_notes": add_safety_reminders({}, user_data.get('limitations', {}).get('restrictions', [])),
+        # 使用LLM生成的结构化数据
+        "weekly_plan": parsed_plan.get("weekly_plan", {}),
+        "daily_workouts": parsed_plan.get("daily_workouts", []),
+        "progression": parsed_plan.get("progression", {}),
+        "nutrition_tips": parsed_plan.get("nutrition_tips", []),
+        "safety_notes": add_safety_reminders(
+            parsed_plan.get("safety_reminders", []), 
+            user_data.get('limitations', {}).get('restrictions', [])
+        ),
         "disclaimer": get_disclaimer(),
         "tips": [
             "📱 建议截图保存此计划，本应用不保存任何个人信息",

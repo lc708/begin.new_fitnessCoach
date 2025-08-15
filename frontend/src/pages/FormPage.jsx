@@ -9,10 +9,16 @@ const FormPage = () => {
   const [currentStep, setCurrentStep] = useState(0)
 
   const handleFormSubmit = async (formData) => {
+    // 立即设置加载状态并跳转到加载页面
+    setLoading(true)
+    setUserData(formData)
+    navigate('/plan') // 立即跳转到加载页面
+    
     try {
-      setLoading(true)
-      setUserData(formData)
-
+      // 调试：打印提交的表单数据
+      console.log('提交的表单数据:', JSON.stringify(formData, null, 2))
+      console.log('用户选择的训练时间安排:', formData.schedule)
+      
       // 调用API生成训练计划
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/generate-plan`, {
         method: 'POST',
@@ -26,13 +32,16 @@ const FormPage = () => {
 
       if (result.success) {
         setGeneratedPlan(result.data.plan)
-        navigate('/plan')
+        // 已经在plan页面了，不需要再跳转
       } else {
+        // 出错时跳回表单页面
         alert('生成训练计划失败：' + (result.error || '未知错误'))
+        navigate('/form')
       }
     } catch (error) {
       console.error('API调用失败:', error)
       alert('网络错误，请检查后端服务是否运行')
+      navigate('/form') // 出错时跳回表单页面
     } finally {
       setLoading(false)
     }
@@ -49,11 +58,14 @@ const FormPage = () => {
           <p className="text-gray-600">
             请填写您的基本信息，我们将为您生成个性化的训练计划
           </p>
+          <p className="text-sm text-gray-500 mt-2">
+            <a href="https://www.begin.new/" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">FitCoach powered by begin.new</a>
+          </p>
         </div>
 
         {/* Progress Indicator */}
         <div className="mb-8">
-          <div className="flex items-center justify-center space-x-4">
+          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4">
             {[
               { step: 0, title: '基本信息' },
               { step: 1, title: '健身目标' },
@@ -68,13 +80,13 @@ const FormPage = () => {
                 }`}>
                   {item.step + 1}
                 </div>
-                <span className={`ml-2 text-sm ${
+                <span className={`ml-1 md:ml-2 text-xs md:text-sm ${
                   currentStep >= item.step ? 'text-primary-600' : 'text-gray-500'
                 }`}>
                   {item.title}
                 </span>
                 {index < 3 && (
-                  <div className={`w-8 h-0.5 ml-4 ${
+                  <div className={`w-4 md:w-8 h-0.5 ml-2 md:ml-4 ${
                     currentStep > item.step ? 'bg-primary-500' : 'bg-gray-200'
                   }`}></div>
                 )}

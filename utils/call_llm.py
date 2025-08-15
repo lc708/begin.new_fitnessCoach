@@ -10,8 +10,12 @@ def call_llm(prompt: str, provider: Optional[str] = None) -> str:
     
     Args:
         prompt: The prompt to send to the LLM
-        provider: LLM provider to use ('openai', 'gemini', 'deepseek'). 
-                 If None, uses LLM_PROVIDER env var or defaults to 'openai'
+        provider: LLM provider to use. If None, uses LLM_PROVIDER env var.
+                 Supported providers:
+                 - openai: OpenAI GPT models (直接API)
+                 - gemini: Google Gemini models (直接API，需要GEMINI_API_KEY)  
+                 - deepseek: DeepSeek models (直接API)
+                 - openrouter: 通过OpenRouter调用各种模型 (统一API，推荐用于Gemini)
     
     Returns:
         The LLM response as a string
@@ -69,8 +73,28 @@ def call_llm(prompt: str, provider: Optional[str] = None) -> str:
         )
         return response.choices[0].message.content
     
+    elif provider == "openrouter":
+        # 通用OPENROUTER接口 - call_llm版本
+        from openai import OpenAI
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            raise ValueError("OPENROUTER_API_KEY not found in environment variables")
+        
+        client = OpenAI(
+            api_key=api_key,
+            base_url="https://openrouter.ai/api/v1"
+        )
+        model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
+        
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            timeout=60.0
+        )
+        return response.choices[0].message.content
+    
     else:
-        raise ValueError(f"Unsupported provider: {provider}. Choose from: openai, gemini, deepseek")
+        raise ValueError(f"Unsupported provider: {provider}. Choose from: openai, gemini, deepseek, openrouter")
 
 def call_llm_with_system(system_prompt: str, user_prompt: str, provider: Optional[str] = None) -> str:
     """
@@ -79,7 +103,11 @@ def call_llm_with_system(system_prompt: str, user_prompt: str, provider: Optiona
     Args:
         system_prompt: The system prompt to set context
         user_prompt: The user prompt
-        provider: LLM provider to use ('openai', 'gemini', 'deepseek')
+        provider: LLM provider to use. Supported providers:
+                 - openai: OpenAI GPT models (直接API)
+                 - gemini: Google Gemini models (直接API，system+user会合并)
+                 - deepseek: DeepSeek models (直接API)
+                 - openrouter: 通过OpenRouter调用各种模型 (统一API，当前推荐)
     
     Returns:
         The LLM response as a string
@@ -107,6 +135,7 @@ def call_llm_with_system(system_prompt: str, user_prompt: str, provider: Optiona
         return response.choices[0].message.content
     
     elif provider == "gemini":
+        # 使用Google官方API直接调用GEMINI
         try:
             import google.generativeai as genai
         except ImportError:
@@ -119,7 +148,7 @@ def call_llm_with_system(system_prompt: str, user_prompt: str, provider: Optiona
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-2.5-flash"))
         
-        # For Gemini, combine system and user prompts
+        # 对于Google直接API，需要合并system和user prompts
         combined_prompt = f"System: {system_prompt}\n\nUser: {user_prompt}"
         response = model.generate_content(combined_prompt)
         return response.text
@@ -146,8 +175,31 @@ def call_llm_with_system(system_prompt: str, user_prompt: str, provider: Optiona
         )
         return response.choices[0].message.content
     
+    elif provider == "openrouter":
+        # 通用OPENROUTER接口 - call_llm_with_system版本
+        from openai import OpenAI
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            raise ValueError("OPENROUTER_API_KEY not found in environment variables")
+        
+        client = OpenAI(
+            api_key=api_key,
+            base_url="https://openrouter.ai/api/v1"
+        )
+        model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
+        
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            timeout=60.0
+        )
+        return response.choices[0].message.content
+    
     else:
-        raise ValueError(f"Unsupported provider: {provider}. Choose from: openai, gemini, deepseek")
+        raise ValueError(f"Unsupported provider: {provider}. Choose from: openai, gemini, deepseek, openrouter")
 
 if __name__ == "__main__":
     # Test with different providers

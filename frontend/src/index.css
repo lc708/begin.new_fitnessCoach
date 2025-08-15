@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   body {
@@ -28,7 +28,95 @@
     @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
   }
   
+  /* 移动端下拉选择器优化 - 完全重新设计 */
+  @media screen and (max-width: 768px) {
+    /* 基础重置所有select元素 */
+    select,
+    .form-input select,
+    select.form-input {
+      /* 重置所有浏览器默认样式 */
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+      
+      /* 基础样式 */
+      font-size: 16px !important; /* 防止iOS缩放 */
+      line-height: 1.5 !important;
+      padding: 12px 16px !important;
+      padding-right: 48px !important; /* 为箭头留出空间 */
+      
+      /* 尺寸和布局 */
+      width: 100% !important;
+      min-height: 48px !important;
+      box-sizing: border-box !important;
+      
+      /* 外观 */
+      background: white !important;
+      border: 1px solid #d1d5db !important;
+      border-radius: 6px !important;
+      color: #111827 !important;
+      
+      /* 位置和层级 */
+      position: relative !important;
+      z-index: 10 !important;
+      
+      /* 自定义箭头 */
+      background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSIjNkI3MjgwIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==") !important;
+      background-repeat: no-repeat !important;
+      background-position: calc(100% - 16px) center !important;
+      background-size: 12px !important;
+    }
+    
+    /* 焦点状态 */
+    select:focus,
+    .form-input select:focus,
+    select.form-input:focus {
+      outline: none !important;
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    }
+    
+    /* Option样式 - 特别处理Chrome移动端 */
+    select option,
+    .form-input select option,
+    select.form-input option {
+      font-size: 16px !important;
+      padding: 12px 16px !important;
+      background-color: white !important;
+      color: #111827 !important;
+      border: none !important;
+      min-height: 48px !important;
+    }
+    
+    /* 特殊处理Chrome移动端渲染问题 */
+    @supports (appearance: none) {
+      select,
+      .form-input select,
+      select.form-input {
+        appearance: none !important;
+      }
+    }
+    
+    /* 确保容器没有影响 */
+    .form-input {
+      position: static !important;
+      display: block !important;
+    }
+  }
+  
   .form-label {
     @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+  
+  /* 其他表单元素的移动端优化 */
+  @media screen and (max-width: 768px) {
+    /* 防止其他表单元素在iOS上被缩放 */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="tel"],
+    textarea {
+      font-size: 16px !important;
+    }
   }
 }

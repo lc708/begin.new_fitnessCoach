@@ -43,6 +43,9 @@ const PlanPage = () => {
           <p className="text-gray-600">
             基于您的身体状况和目标量身定制
           </p>
+          <p className="text-sm text-gray-500 mt-2">
+            <a href="https://www.begin.new/" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">FitCoach powered by begin.new</a>
+          </p>
         </div>
 
         {/* Action Buttons */}
@@ -112,7 +115,7 @@ const PlanPage = () => {
           </div>
           
           <p className="text-sm text-gray-500">
-            感谢使用 FitCoach！祝您训练愉快，早日达成目标！🏆
+            感谢使用 FitCoach！祝您训练愉快，早日达成目标！🏆 • <a href="https://www.begin.new/" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">powered by begin.new</a>
           </p>
         </div>
       </div>

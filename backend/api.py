@@ -9,6 +9,16 @@ import logging
 import sys
 import os
 
+# 加载.env文件
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # 在生产环境中可能不需要dotenv
+
+# 强制使用更快的LLM - 通过OPENROUTER使用GEMINI 2.5 FLASH
+os.environ["LLM_PROVIDER"] = "openrouter"
+
 # 添加父目录到路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -38,13 +48,13 @@ app.add_middleware(
 # 数据模型定义
 class BasicInfo(BaseModel):
     age: int = Field(..., ge=16, le=80, description="年龄，16-80岁")
-    gender: str = Field(..., regex="^(男|女)$", description="性别")
+    gender: str = Field(..., pattern="^(男|女)$", description="性别")
     height: float = Field(..., ge=140, le=220, description="身高，140-220cm")
     weight: float = Field(..., ge=40, le=200, description="体重，40-200kg")
-    experience: str = Field(..., regex="^(beginner|intermediate|advanced)$", description="健身经验")
+    experience: str = Field(..., pattern="^(beginner|intermediate|advanced)$", description="健身经验")
 
 class Goals(BaseModel):
-    primary_goal: str = Field(..., regex="^(weight_loss|muscle_gain|strength|endurance|toning)$", description="主要目标")
+    primary_goal: str = Field(..., pattern="^(weight_loss|muscle_gain|strength|endurance|toning)$", description="主要目标")
     target_areas: Optional[List[str]] = Field(default=["全身"], description="目标训练部位")
     timeline: Optional[str] = Field(default="4周", description="目标时间线")
 
@@ -105,12 +115,18 @@ async def generate_plan(user_data: UserDataRequest):
     try:
         logger.info("收到训练计划生成请求")
         
+        # 调试：打印收到的原始数据
+        logger.info(f"用户提交的基本信息: {user_data.basic_info}")
+        logger.info(f"用户提交的目标: {user_data.goals}")
+        logger.info(f"用户提交的时间安排: {user_data.schedule}")
+        logger.info(f"用户提交的限制: {user_data.limitations}")
+        
         # 转换Pydantic模型为字典
         user_data_dict = {
-            "basic_info": user_data.basic_info.dict(),
-            "goals": user_data.goals.dict(),
-            "schedule": user_data.schedule.dict(),
-            "limitations": user_data.limitations.dict() if user_data.limitations else {"injuries": [], "restrictions": []}
+            "basic_info": user_data.basic_info.model_dump(),
+            "goals": user_data.goals.model_dump(),
+            "schedule": user_data.schedule.model_dump(),
+            "limitations": user_data.limitations.model_dump() if user_data.limitations else {"injuries": [], "restrictions": []}
         }
         
         # 初始化共享存储

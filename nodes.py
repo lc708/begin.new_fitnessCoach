@@ -263,35 +263,76 @@ class PlanGenerationNode(Node):
         safety_guidelines = get_safety_guidelines()
         
         # 构建计划生成提示
-        system_prompt = """你是一位资深的健身教练，请根据用户的分析结果和可用的训练动作，生成一份详细的个性化训练计划。
-
-计划应该包含：
-1. 训练概述和原则
-2. 具体的周训练安排
-3. 每日训练内容
-4. 动作要点和注意事项
-5. 进阶建议
-
-请以结构化的方式返回，内容要专业且易于理解。"""
-        
-        user_prompt = f"""
-基于以下信息生成训练计划：
-
-用户目标分析：
-{json.dumps(analysis_result, ensure_ascii=False, indent=2)}
-
-用户数据：
+        system_prompt = f"""你是专业健身教练。生成训练计划必须严格遵守：
+- 每周{user_data['schedule']['days_per_week']}次训练
+- 每次{user_data['schedule']['time_per_session']}分钟
+- 适合{level}水平
 - 目标：{goal}
-- 水平：{level}
-- 频率：每周{user_data['schedule']['days_per_week']}次
-- 时长：每次{user_data['schedule']['time_per_session']}分钟
-- 限制：{user_data['limitations']}
 
-可用训练动作：
-{json.dumps(exercises, ensure_ascii=False, indent=2)}
+必须返回严格的JSON格式，结构如下：
+{{
+  "plan_title": "计划标题",
+  "overview": {{
+    "description": "计划概述",
+    "principles": ["训练原则1", "训练原则2"]
+  }},
+  "weekly_plan": {{
+    "total_days": {user_data['schedule']['days_per_week']},
+    "session_duration": {user_data['schedule']['time_per_session']},
+    "rest_days": "休息日安排"
+  }},
+  "daily_workouts": [
+    {{
+      "day": 1,
+      "title": "训练日标题",
+      "focus": "训练重点",
+      "warm_up": {{
+        "duration": 5,
+        "exercises": ["热身动作1", "热身动作2"]
+      }},
+      "main_exercises": [
+        {{
+          "name": "动作名称",
+          "target_muscles": ["目标肌群1", "目标肌群2"],
+          "sets": 3,
+          "reps": "8-12",
+          "rest": "60秒",
+          "description": "动作要领",
+          "tips": ["技巧1", "技巧2"]
+        }}
+      ],
+      "cool_down": {{
+        "duration": 5,
+        "exercises": ["拉伸动作1", "拉伸动作2"]
+      }}
+    }}
+  ],
+  "progression": {{
+    "week1": "第一周要点",
+    "week2": "第二周要点",
+    "week3": "第三周要点",
+    "week4": "第四周要点"
+  }},
+  "nutrition_tips": ["营养建议1", "营养建议2"],
+  "safety_reminders": ["安全提醒1", "安全提醒2"]
+}}
 
-请生成一份完整的训练计划，重点关注安全性和实用性。
-"""
+只返回有效的JSON，不要有任何其他文字说明。"""
+        
+        # 调试：打印用户的时间安排
+        logger.info(f"用户选择的训练频率: 每周{user_data['schedule']['days_per_week']}次")
+        logger.info(f"用户选择的训练时长: 每次{user_data['schedule']['time_per_session']}分钟")
+        
+        user_prompt = f"""用户信息：
+- 年龄：{user_data['basic_info']['age']}岁
+- 性别：{user_data['basic_info']['gender']}
+- 身高：{user_data['basic_info']['height']}cm
+- 体重：{user_data['basic_info']['weight']}kg
+- 经验：{user_data['basic_info']['experience']}
+- 目标：{user_data['goals']['primary_goal']}
+- 限制：{user_data['limitations'].get('restrictions', [])}
+
+请生成符合以上JSON格式的训练计划。"""
         
         try:
             raw_plan = call_llm_with_system(system_prompt, user_prompt)
@@ -321,6 +362,7 @@ class PlanGenerationNode(Node):
         goal = user_data['goals']['primary_goal']
         level = user_data['basic_info']['experience']
         frequency = user_data['schedule']['days_per_week']
+        session_time = user_data['schedule']['time_per_session']
         
         goal_names = {
             'weight_loss': '减脂塑形',
@@ -330,11 +372,15 @@ class PlanGenerationNode(Node):
             'toning': '身体塑形'
         }
         
+        logger.warning(f"使用后备计划：每周{frequency}次，每次{session_time}分钟")
+        
         plan_text = f"""
 # {goal_names.get(goal, '健身')}训练计划
 
 ## 计划概述
-这是一份为{level}水平制定的{goal_names.get(goal, '健身')}计划，每周训练{frequency}次。
+这是一份为{level}水平制定的{goal_names.get(goal, '健身')}计划，每周训练{frequency}次，每次{session_time}分钟。
+
+**重要提醒：这是后备简化计划，建议稍后重试以获得更详细的个性化计划。**
 
 ## 训练原则
 1. 循序渐进，重视动作质量
@@ -343,10 +389,15 @@ class PlanGenerationNode(Node):
 4. 有问题及时调整
 
 ## 周训练安排
-根据您的时间安排，建议分配如下：
-- 主要训练日：进行力量训练
-- 辅助训练日：进行有氧和拉伸
-- 休息日：完全休息或轻度活动
+根据您选择的每周{frequency}次、每次{session_time}分钟的时间安排：
+- 训练频率：每周{frequency}天
+- 每次时长：{session_time}分钟
+- 训练强度：适合{level}水平
+
+## 注意事项
+- 请遵循您设定的时间安排：每周{frequency}次，每次{session_time}分钟
+- 建议稍后重试以获得更详细的个性化训练计划
+- 如需专业指导，请咨询健身教练
 
 训练内容将包含适合您水平的动作，确保安全有效。
 """

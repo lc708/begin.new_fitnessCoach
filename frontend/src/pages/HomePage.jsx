@@ -33,9 +33,12 @@ const HomePage = () => {
         <div className="text-center max-w-4xl mx-auto">
           {/* Logo/Brand */}
           <div className="mb-8">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-2">
               🏋️ FitCoach
             </h1>
+            <p className="text-sm text-gray-500 mb-4">
+              <a href="https://www.begin.new/" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">powered by begin.new</a>
+            </p>
             <p className="text-xl md:text-2xl text-gray-600 font-medium">
               AI驱动的个性化健身训练计划
             </p>
@@ -127,9 +130,9 @@ const HomePage = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-300 py-8">
         <div className="container mx-auto px-4 text-center">
-          <p className="mb-2">© 2024 FitCoach - 个性化健身训练计划生成器</p>
+          <p className="mb-2">© 2025 FitCoach - 个性化健身训练计划生成器</p>
           <p className="text-sm text-gray-500">
-            基于AI技术，为您提供专业的健身指导 • 完全免费 • 保护隐私
+            基于AI技术，为您提供专业的健身指导 • 完全免费 • 保护隐私 • <a href="https://www.begin.new/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">powered by begin.new</a>
           </p>
         </div>
       </footer>
